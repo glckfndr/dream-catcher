@@ -34,12 +34,15 @@ dreamForm.addEventListener("submit", async (e) => {
     });
 
     const data = await response.json();
+
     if (!response.ok) {
       showErrorMessage(
         data.error || "Failed to process your dream. Please try again.",
       );
       return;
     }
+
+    const newDream = data;
 
     // Clear form
     dreamText.value = "";
@@ -48,7 +51,9 @@ dreamForm.addEventListener("submit", async (e) => {
     await loadDreams();
   } catch (error) {
     console.error("Error:", error);
-    showErrorMessage(error.message);
+    showErrorMessage(
+      "Network error. Please check your connection and try again.",
+    );
   } finally {
     // Re-enable form
     submitBtn.disabled = false;

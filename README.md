@@ -1,6 +1,6 @@
 # Dream Journal App
 
-A full-stack web application for recording dreams and generating AI-powered interpretations.
+A full-stack web application that allows users to record their dreams and receive AI-powered interpretations using Claude.
 
 ## Features
 
@@ -15,31 +15,23 @@ A full-stack web application for recording dreams and generating AI-powered inte
 ## Tech Stack
 
 - **Backend**: Node.js, Express
-- **Database**: SQLite (`sqlite` + `sqlite3`)
+- **Database**: SQLite (better-sqlite3)
 - **Frontend**: HTML, CSS, Vanilla JavaScript
-- **AI**: OpenAI API or Google Gemini API
+- **AI**: Anthropic Claude API
 
 ## Project Structure
 
 ```
 dream-journal/
-├── server.js            # Express server and app bootstrap
-├── package.json         # Dependencies and scripts
-├── Dockerfile           # Container build config
-├── config/
-│   ├── database.js      # DB connection
-│   └── database-init.js # DB schema initialization
-├── routes/
-│   └── dreams.js        # REST API endpoints
-├── utils/
-│   ├── ai-openai.js     # OpenAI integration
-│   ├── ai-gemini.js     # Gemini integration
-│   └── validateText.js  # Input validation
-├── dreams.db            # SQLite database (auto-created)
+├── server.js           # Express server and API routes
+├── package.json        # Dependencies and scripts
+├── .env               # Environment variables (create this)
+├── .env.example       # Example env file
+├── dreams.db          # SQLite database (auto-created)
 └── public/
-    ├── index.html      # Frontend HTML
-    ├── styles.css      # Styles
-    └── app.js          # Frontend JavaScript
+    ├── index.html     # Frontend HTML
+    ├── styles.css     # Styles
+    └── app.js         # Frontend JavaScript
 ```
 
 ## Setup Instructions
@@ -52,25 +44,20 @@ npm install
 
 ### 2. Set Up Environment Variables
 
-Create a `.env` file in the root directory and add the variables you need:
+Create a `.env` file in the root directory:
 
-```env
-# Server
-PORT=3001
-
-# Use OpenAI
-OPENAI_API_KEY=your_openai_api_key
-OPENAI_MODEL=gpt-4o-mini
-
-# Or use Gemini
-GEMINI_API_KEY=your_gemini_api_key
-GEMINI_MODEL=gemini-2.5-flash
-
-# Optional DB path override
-# DATABASE_PATH=./dreams.db
+```bash
+cp .env.example .env
 ```
 
-You only need one AI provider key at runtime, based on which integration you use.
+Edit `.env` and add your Anthropic API key:
+
+```
+ANTHROPIC_API_KEY=your_api_key_here
+PORT=3000
+```
+
+Get your API key from: https://console.anthropic.com/
 
 ### 3. Run the Application
 
@@ -86,7 +73,7 @@ Production mode:
 npm start
 ```
 
-The app will be available at `http://localhost:3001` by default.
+The app will be available at `http://localhost:3000`
 
 ## API Endpoints
 
@@ -95,48 +82,40 @@ The app will be available at `http://localhost:3001` by default.
 - `POST /api/dreams` - Create a new dream (requires `dream_text` in body)
 - `DELETE /api/dreams/:id` - Delete a dream
 
-## Deployment to Render (Docker)
+## Deployment to Render
 
-This project is deployed as a Docker image from Docker Hub.
+### 1. Prepare Your Repository
 
-### 1. Build and push image
+Make sure your code is in a Git repository (GitHub, GitLab, etc.)
 
-```bash
-docker build --platform linux/amd64 -t glckfndr/dream-journal:v1 .
-docker push glckfndr/dream-journal:v1
-```
+### 2. Create a New Web Service on Render
 
-For the next release, increment the tag (for example: `v2`, `v3`).
+1. Go to https://render.com and sign in
+2. Click "New +" and select "Web Service"
+3. Connect your repository
+4. Configure the service:
+   - **Name**: dream-journal (or your choice)
+   - **Environment**: Node
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start`
 
-### 2. Create Web Service in Render
+### 3. Add Environment Variables
 
-1. Go to https://render.com and sign in.
-2. Click **New +** -> **Web Service**.
-3. Choose **Deploy an existing image from a registry**.
-4. Set image to `glckfndr/dream-journal:v1`.
-5. Set **Port** to `3001`.
+In the Render dashboard, add:
 
-### 3. Environment variables
+- `ANTHROPIC_API_KEY`: Your Anthropic API key
 
-Add the variables you actually use:
+### 4. Deploy
 
-- `OPENAI_API_KEY` (if using OpenAI)
-- `OPENAI_MODEL` (optional, default in code is `gpt-4o-mini`)
-- `GEMINI_API_KEY` (if using Gemini)
-- `GEMINI_MODEL` (optional, default in code is `gemini-2.5-flash`)
-- `DATABASE_PATH=/var/data/dreams.db`
+Click "Create Web Service" and Render will deploy your app automatically.
 
-### 4. Persistent storage for SQLite
+### 5. Database Persistence
 
-Attach a **Persistent Disk** in Render and set mount path to `/var/data`.
-Without this, SQLite data is lost after restarts/redeploys.
+Note: The SQLite database file will be stored in Render's ephemeral filesystem. For production, consider:
 
-### 5. Deploy updates
-
-1. Build and push a new tag:
-   - `docker build --platform linux/amd64 -t glckfndr/dream-journal:v2 .`
-   - `docker push glckfndr/dream-journal:v2`
-2. In Render, deploy the new image tag (`v2`).
+- Using Render's persistent disk feature
+- Migrating to PostgreSQL for better persistence
+- Backing up data regularly
 
 ## Usage
 
