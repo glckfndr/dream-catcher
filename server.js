@@ -3,6 +3,7 @@ import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import helmet from "helmet";
 import { initDatabase } from "./config/database-init.js";
+import pool from "./config/database.js";
 import dreamsRouter from "./routes/dreams.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -23,6 +24,26 @@ app.use(express.static(join(__dirname, "public")));
 
 // API Routes
 app.use("/api/dreams", dreamsRouter);
+
+// health endpoint
+
+app.get("/health", async (req, res) => {
+  try {
+    await pool.query("SELECT 1");
+    res.json({
+      status: "ok",
+      db: "connected",
+      uptime: process.uptime(),
+    });
+  } catch (err) {
+    res.status(503).json({
+      status: "error",
+      db: "disconnected",
+      message: err.message,
+      uptime: process.uptime(),
+    });
+  }
+});
 
 // Initialize database then start server
 initDatabase()
